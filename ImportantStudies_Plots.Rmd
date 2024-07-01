@@ -1,0 +1,171 @@
+---
+title: "ImportantStudies_Plots"
+author: "Aïsha Schuhegger"
+date: "5/16/2024"
+output: html_document
+---
+
+This script provides all plots that are used in the paper "Impact of progress visualization and user feedback on the long-term usage of mental health apps".
+
+# Import libraries & set working directory
+
+```{r, comment=NA}
+library(dplyr)
+library(ggplot2)
+setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+folderpath = "../figures/"
+if (!dir.exists(folderpath)) {
+  # If the folder does not exist, create it
+  dir.create(folderpath, recursive = TRUE)
+  print(paste("Folder", folderpath, "created."))
+} else {
+  print(paste("Folder", folderpath, "already exists."))
+}
+```
+
+# Read in CSV File and check that the names of the authors are represented in the rownames
+
+```{r}
+studies <- read.csv("../ImportantStudies.csv", sep=";")
+rownames(studies) <- studies$Author
+colnames(studies)[colnames(studies) == "Length.weeks."] <- "Length"
+# Make columns numeric that need to be
+studies$RetentionRate <- as.numeric(gsub(",", ".", studies$RetentionRate))
+studies$UserSatisfaction <- as.numeric(gsub(",", ".", studies$UserSatisfaction))
+studies$ProgressVisualization <- as.numeric(studies$ProgressVisualization)
+studies$Feedback <- as.numeric(studies$Feedback)
+studies$Length <- as.numeric(studies$Length)
+
+custom_colors <- c("0" = "lightblue2", "1" = "paleturquoise4", "2" = "deepskyblue4")
+custom_labels <- c("0" = "Progress \nVisualization", "1" = "User Feedback", "2"  = "Progress Visualization \nAnd User Feedback")
+```
+
+# Retention Rate
+```{r}
+
+studies$ProgFeedBoth <- as.factor(studies$ProgFeedBoth)
+
+retentionrate_authors <- ggplot(studies, aes(x = Author, y = RetentionRate, fill = ProgFeedBoth)) +
+  geom_bar(stat = "identity", width=0.5) +
+  ylim(0, 1) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  ggtitle("Retention Rates by Author") +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  scale_fill_manual(values = custom_colors, labels = custom_labels) +
+  labs(fill = "Type of Factor")  # Adding legend title
+retentionrate_authors
+
+ggsave(paste(folderpath, "/retentionrate_authors.png", sep=""), plot = retentionrate_authors, width = 5.5, height = 4.5, units = "in", dpi = 300)
+```
+
+# Retention Rate vs. Length
+```{r}
+retrate_length_scatterplot <- ggplot(studies, aes(x = Length, y = RetentionRate)) +
+  geom_point(color="darkblue") +
+  labs(title = "Retention Rate vs. Length",
+       x = "Length (in weeks)",
+       y = "Retention Rate") +
+  theme(plot.title = element_text(hjust = 0.5)) 
+ggsave(paste(folderpath, "/retentionrate_length.png", sep=""), plot = retrate_length_scatterplot, width = 5.5, height = 4.5, units = "in", dpi = 300)
+
+retrate_length_trend <- ggplot(studies, aes(x = Length, y = RetentionRate)) +
+  geom_point(color="darkblue") +
+  geom_smooth(method = "lm", se = FALSE, color="grey") +
+  labs(title = "Retention Rate vs. Length",
+       x = "Length (in weeks)",
+       y = "Retention Rate") +
+  theme(plot.title = element_text(hjust = 0.5)) 
+retrate_length_trend
+ggsave(paste(folderpath, "/retentionrate_length_trend.png", sep=""), plot = retrate_length_trend, width = 5.5, height = 4.5, units = "in", dpi = 300)
+
+studies_adjusted <- studies
+studies_adjusted <- studies[-c(6),]
+retrate_length_adjusted_loweroutlier <- ggplot(studies_adjusted, aes(x = Length, y = RetentionRate)) +
+  geom_point(color="darkblue") +
+  geom_smooth(method = "lm", se = FALSE, color="grey") +
+  labs(title = "Retention Rate vs. Length (without low outlier)",
+       x = "Length (in weeks)",
+       y = "Retention Rate") +
+  theme(plot.title = element_text(hjust = 0.5)) 
+ggsave(paste(folderpath, "/retentionrate_length_withoutLowerOutlier.png", sep=""), plot = retrate_length_adjusted_loweroutlier, width = 5.5, height = 4.5, units = "in", dpi = 300)
+retrate_length_adjusted_loweroutlier
+```
+
+#Retention Rate vs. User Satisfaction
+```{r}
+studies_clean <- studies %>% 
+  filter(!is.na(UserSatisfaction), !is.na(RetentionRate))
+studies$SatisfactionCategory <- cut(studies$UserSatisfaction, 
+                                    breaks = c(-Inf, 0, 1, Inf), 
+                                    labels = c("low", "medium", "high"), 
+                                    right = FALSE)
+# Create the boxplot
+retrate_us <- ggplot(studies, aes(x = factor(SatisfactionCategory), y = RetentionRate)) +
+  geom_boxplot(color = "darkblue") +
+  labs(
+    title = "Retention Rate by User Satisfaction",
+    x = "User Satisfaction",
+    y = "Retention Rate"
+  ) +
+  theme(plot.title = element_text(hjust = 0.5))
+retrate_us
+ggsave(paste(folderpath, "/retentionrate_user_satisfaction.png", sep=""), plot = retrate_us, width = 5.5, height = 4.5, units = "in", dpi = 300)
+```
+
+# User Satisfaction
+```{r}
+usersat <- ggplot(studies, aes(x = factor(SatisfactionCategory), fill = factor(ProgFeedBoth))) +
+  geom_bar(width = 0.5) +
+  scale_fill_manual(values = custom_colors, labels = custom_labels) +
+  labs(title = "User Satisfaction Distribution",
+       x = "User Satisfaction",
+       y = "Amount of Studies",
+       fill = "Type of Factor") +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  scale_y_continuous(breaks = seq(0, max(table(studies$SatisfactionCategory)), by = 1))
+
+usersat
+ggsave(paste(folderpath, "/userSatisfaction_factors.png", sep=""), plot = usersat, width = 6, height = 4.5, units = "in", dpi = 300)
+```
+
+# Factor Distribution
+
+```{r}
+factors_bar <- ggplot(studies, aes(x = factor(ProgFeedBoth), fill = factor(ProgFeedBoth))) +
+  geom_bar(width = 0.5) +
+  scale_x_discrete(labels = custom_labels) + 
+  scale_fill_manual(values = custom_colors, labels = custom_labels) +  # Use custom colors and labels
+  labs(title = "Factor Distribution",
+       x = "App Includes Factor",
+       y = "Amount of Studies",
+       fill = NULL) +  # Remove the legend title
+  theme(plot.title = element_text(hjust = 0.5),
+        legend.position = "none") +
+  scale_y_continuous(breaks = seq(0, 10, by = 1), limits = c(0, 10))  # Set y-axis breaks and limits
+
+factors_bar
+ggsave(paste(folderpath, "/AmountStudies_Factors.png", sep=""), plot = factors_bar, width = 5.5, height = 4.5, units = "in", dpi = 300)
+```
+
+# Retention Rate vs. grouped factors
+
+```{r}
+studies$ProgFeedBoth <- as.numeric(studies$ProgFeedBoth)
+studies$FactorsCategory <- cut(studies$ProgFeedBoth, 
+                                breaks = c(0, 1, 2), 
+                                labels = c("User Feedback", "Progress Visualization \nAnd User Feedback"), 
+                                right = TRUE)
+
+
+retrate_factors <- ggplot(studies, aes(x = factor(FactorsCategory), y = RetentionRate)) +
+  geom_boxplot(color = "darkblue") +
+  labs(
+    title = "Retention Rate by Factor",
+    x = "Factor",
+    y = "Retention Rate"
+  ) +
+  theme(plot.title = element_text(hjust = 0.5))
+retrate_factors #0.87, 0.88 = median
+ggsave(paste(folderpath, "/retentionrate_factors.png", sep=""), plot = retrate_factors, width = 5.5, height = 4.5, units = "in", dpi = 300)
+```
+
