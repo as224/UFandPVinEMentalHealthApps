@@ -48,11 +48,11 @@ studies$ProgFeedBoth <- as.factor(studies$ProgFeedBoth)
 retentionrate_authors <- ggplot(studies, aes(x = Author, y = RetentionRate, fill = ProgFeedBoth)) +
   geom_bar(stat = "identity", width=0.5) +
   ylim(0, 1) +
+  theme_classic() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  ggtitle("Retention Rates by Author") +
   theme(plot.title = element_text(hjust = 0.5)) +
   scale_fill_manual(values = custom_colors, labels = custom_labels) +
-  labs(fill = "Type of Factor")  # Adding legend title
+  labs(fill = "Type of Factor")  # Adding legend title 
 retentionrate_authors
 
 ggsave(paste(folderpath, "/retentionrate_authors.png", sep=""), plot = retentionrate_authors, width = 5.5, height = 4.5, units = "in", dpi = 300)
@@ -62,19 +62,19 @@ ggsave(paste(folderpath, "/retentionrate_authors.png", sep=""), plot = retention
 ```{r}
 retrate_length_scatterplot <- ggplot(studies, aes(x = Length, y = RetentionRate)) +
   geom_point(color="darkblue") +
-  labs(title = "Retention Rate vs. Length",
-       x = "Length (in weeks)",
+  labs(x = "Length (in weeks)",
        y = "Retention Rate") +
-  theme(plot.title = element_text(hjust = 0.5)) 
+  theme(plot.title = element_text(hjust = 0.5)) +
+  theme_classic()
 ggsave(paste(folderpath, "/retentionrate_length.png", sep=""), plot = retrate_length_scatterplot, width = 5.5, height = 4.5, units = "in", dpi = 300)
 
 retrate_length_trend <- ggplot(studies, aes(x = Length, y = RetentionRate)) +
   geom_point(color="darkblue") +
   geom_smooth(method = "lm", se = FALSE, color="grey") +
-  labs(title = "Retention Rate vs. Length",
-       x = "Length (in weeks)",
+  labs(x = "Length (in weeks)",
        y = "Retention Rate") +
-  theme(plot.title = element_text(hjust = 0.5)) 
+  theme(plot.title = element_text(hjust = 0.5)) +
+  theme_classic()
 retrate_length_trend
 ggsave(paste(folderpath, "/retentionrate_length_trend.png", sep=""), plot = retrate_length_trend, width = 5.5, height = 4.5, units = "in", dpi = 300)
 
@@ -83,10 +83,10 @@ studies_adjusted <- studies[-c(6),]
 retrate_length_adjusted_loweroutlier <- ggplot(studies_adjusted, aes(x = Length, y = RetentionRate)) +
   geom_point(color="darkblue") +
   geom_smooth(method = "lm", se = FALSE, color="grey") +
-  labs(title = "Retention Rate vs. Length (without low outlier)",
-       x = "Length (in weeks)",
+  labs(x = "Length (in weeks)",
        y = "Retention Rate") +
-  theme(plot.title = element_text(hjust = 0.5)) 
+  theme(plot.title = element_text(hjust = 0.5)) +
+  theme_classic()
 ggsave(paste(folderpath, "/retentionrate_length_withoutLowerOutlier.png", sep=""), plot = retrate_length_adjusted_loweroutlier, width = 5.5, height = 4.5, units = "in", dpi = 300)
 retrate_length_adjusted_loweroutlier
 ```
@@ -102,12 +102,11 @@ studies$SatisfactionCategory <- cut(studies$UserSatisfaction,
 # Create the boxplot
 retrate_us <- ggplot(studies, aes(x = factor(SatisfactionCategory), y = RetentionRate)) +
   geom_boxplot(color = "darkblue") +
-  labs(
-    title = "Retention Rate by User Satisfaction",
-    x = "User Satisfaction",
+  labs(x = "User Satisfaction",
     y = "Retention Rate"
   ) +
-  theme(plot.title = element_text(hjust = 0.5))
+  theme(plot.title = element_text(hjust = 0.5)) + 
+  theme_classic()
 retrate_us
 ggsave(paste(folderpath, "/retentionrate_user_satisfaction.png", sep=""), plot = retrate_us, width = 5.5, height = 4.5, units = "in", dpi = 300)
 ```
@@ -117,12 +116,12 @@ ggsave(paste(folderpath, "/retentionrate_user_satisfaction.png", sep=""), plot =
 usersat <- ggplot(studies, aes(x = factor(SatisfactionCategory), fill = factor(ProgFeedBoth))) +
   geom_bar(width = 0.5) +
   scale_fill_manual(values = custom_colors, labels = custom_labels) +
-  labs(title = "User Satisfaction Distribution",
-       x = "User Satisfaction",
+  labs(x = "User Satisfaction",
        y = "Amount of Studies",
        fill = "Type of Factor") +
   theme(plot.title = element_text(hjust = 0.5)) +
-  scale_y_continuous(breaks = seq(0, max(table(studies$SatisfactionCategory)), by = 1))
+  scale_y_continuous(breaks = seq(0, max(table(studies$SatisfactionCategory)), by = 1)) +
+  theme_classic()
 
 usersat
 ggsave(paste(folderpath, "/userSatisfaction_factors.png", sep=""), plot = usersat, width = 6, height = 4.5, units = "in", dpi = 300)
@@ -135,12 +134,12 @@ factors_bar <- ggplot(studies, aes(x = factor(ProgFeedBoth), fill = factor(ProgF
   geom_bar(width = 0.5) +
   scale_x_discrete(labels = custom_labels) + 
   scale_fill_manual(values = custom_colors, labels = custom_labels) +  # Use custom colors and labels
-  labs(title = "Factor Distribution",
-       x = "App Includes Factor",
+  labs(x = "App Includes Factor",
        y = "Amount of Studies",
        fill = NULL) +  # Remove the legend title
   theme(plot.title = element_text(hjust = 0.5),
         legend.position = "none") +
+  theme_classic() + 
   scale_y_continuous(breaks = seq(0, 10, by = 1), limits = c(0, 10))  # Set y-axis breaks and limits
 
 factors_bar
@@ -159,12 +158,11 @@ studies$FactorsCategory <- cut(studies$ProgFeedBoth,
 
 retrate_factors <- ggplot(studies, aes(x = factor(FactorsCategory), y = RetentionRate)) +
   geom_boxplot(color = "darkblue") +
-  labs(
-    title = "Retention Rate by Factor",
-    x = "Factor",
+  labs(x = "Factor",
     y = "Retention Rate"
   ) +
-  theme(plot.title = element_text(hjust = 0.5))
+  theme(plot.title = element_text(hjust = 0.5)) +
+  theme_classic()
 retrate_factors #0.87, 0.88 = median
 ggsave(paste(folderpath, "/retentionrate_factors.png", sep=""), plot = retrate_factors, width = 5.5, height = 4.5, units = "in", dpi = 300)
 ```
